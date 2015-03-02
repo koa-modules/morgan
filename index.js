@@ -20,7 +20,7 @@ originMorgan.middleware = morgan;
 function noop() {}
 
 function morgan() {
-  var args = argument;
+  var args = arguments;
   return function* morgan(next) {
     yield* next;
     originMorgan.apply(null, args)(this.req, this.res, noop);

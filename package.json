@@ -4,11 +4,12 @@
   "description": "HTTP request logger middleware for koa",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --check-leaks --reporter spec --bail",
+    "test": "mocha --check-leaks --reporter spec --bail"
   },
   "repository": "koa-modules/morgan",
   "keywords": [
-    "logger"
+    "logger",
+    "morgan"
   ],
   "author": "Fangdun Cai <cfddream@gmail.com>",
   "license": "MIT",

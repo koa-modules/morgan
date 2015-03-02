@@ -1,0 +1,18 @@
+{
+  "name": "koa-morgan",
+  "version": "0.0.1",
+  "description": "HTTP request logger middleware for koa",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --check-leaks --reporter spec --bail",
+  },
+  "repository": "koa-modules/morgan",
+  "keywords": [
+    "logger"
+  ],
+  "author": "Fangdun Cai <cfddream@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "morgan": "^1.5.1"
+  }
+}

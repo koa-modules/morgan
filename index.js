@@ -11,18 +11,27 @@
 /**
  * Module dependencies.
  */
-var originMorgan = require('morgan');
 
-module.exports = originMorgan;
+var originalMorgan = require('morgan');
 
-originMorgan.middleware = morgan;
+/**
+ * Expose `morgan`.
+ */
 
-function noop() {}
+module.exports = originalMorgan;
+
+originalMorgan.middleware = morgan;
+
+/**
+ * morgan wrapper.
+ */
 
 function morgan() {
   var args = arguments;
   return function* morgan(next) {
     yield* next;
-    originMorgan.apply(null, args)(this.req, this.res, noop);
+    originalMorgan.apply(null, args)(this.req, this.res, noop);
   }
 }
+
+function noop() {}

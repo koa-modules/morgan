@@ -1,6 +1,7 @@
 # koa-morgan
 
-> HTTP request logger middleware for koa.
+> HTTP request logger middleware for koa.  
+> [morgan] wrapper for koa's middleware.
 
 [![NPM version][npm-img]][npm-url]
 [![Build status][travis-img]][travis-url]
@@ -31,7 +32,8 @@ app.use(morgan.middleware(format, options));
 
 * **morgan**
 
-* **morgan.middleware** just wraps **morgan**, returns a GeneratorFunction.
+* **morgan.middleware(format, options)**:
+> Just **morgan** wrapper, returns a GeneratorFunction.
 
 [npm-img]: https://img.shields.io/npm/v/koa-morgan.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/koa-morgan
@@ -43,3 +45,4 @@ app.use(morgan.middleware(format, options));
 [license-url]: LICENSE
 [david-img]: https://img.shields.io/david/koa-modules/morgan.svg?style=flat-square
 [david-url]: https://david-dm.org/koa-modules/morgan
+[morgan]: https://github.com/expressjs/morgan

@@ -1,6 +1,6 @@
 {
   "name": "koa-morgan",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "HTTP request logger middleware for koa",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,11 @@
   ],
   "author": "Fangdun Cai <cfddream@gmail.com>",
   "license": "MIT",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js"
+  ],
   "dependencies": {
     "morgan": "^1.5.1"
   }

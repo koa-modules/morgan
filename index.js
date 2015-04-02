@@ -12,6 +12,7 @@
  * Module dependencies.
  */
 
+var thenify = require('thenify');
 var originalMorgan = require('morgan');
 
 /**
@@ -27,11 +28,9 @@ originalMorgan.middleware = morgan;
  */
 
 function morgan() {
-  var args = arguments;
+  var middleware = thenify(originalMorgan.apply(null, arguments));
   return function* morgan(next) {
     yield* next;
-    originalMorgan.apply(null, args)(this.req, this.res, noop);
+    yield middleware(this.req, this.res);
   }
 }
-
-function noop() {}

@@ -1,6 +1,6 @@
 {
   "name": "koa-morgan",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "HTTP request logger middleware for koa",
   "main": "index.js",
   "scripts": {
@@ -19,7 +19,7 @@
     "index.js"
   ],
   "dependencies": {
-    "morgan": "~1.5.3",
+    "morgan": "^1.6.0",
     "thenify": "^3.1.0"
   }
 }

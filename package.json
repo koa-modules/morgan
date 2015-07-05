@@ -1,6 +1,6 @@
 {
   "name": "koa-morgan",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "HTTP request logger middleware for koa",
   "main": "index.js",
   "scripts": {

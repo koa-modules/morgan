@@ -4,7 +4,9 @@
   "description": "HTTP request logger middleware for koa",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --check-leaks --reporter spec --bail"
+    "test": "mocha --reporter spec --bail --check-leaks",
+    "test-ci": "node_modules/.bin/isparta cover node_modules/.bin/_mocha --report lcovonly -- --reporter spec --check-leaks test/*.js",
+    "test-cov": "node_modules/.bin/isparta cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/*.js"
   },
   "repository": "koa-modules/morgan",
   "keywords": [
@@ -21,5 +23,13 @@
   "dependencies": {
     "morgan": "^1.6.1",
     "thenify": "^3.1.0"
+  },
+  "devDependencies": {
+    "isparta": "^3.0.3",
+    "koa": "^1.0.0",
+    "mocha": "^2.2.5",
+    "power-assert": "^1.0.0",
+    "split": "^1.0.0",
+    "supertest": "^1.1.0"
   }
 }

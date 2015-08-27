@@ -30,7 +30,7 @@ originalMorgan.middleware = morgan;
 function morgan() {
   var middleware = thenify(originalMorgan.apply(null, arguments));
   return function* morgan(next) {
-    yield* next;
     yield middleware(this.req, this.res);
+    yield next;
   }
 }

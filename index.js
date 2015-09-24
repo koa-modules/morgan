@@ -12,25 +12,25 @@
  * Module dependencies.
  */
 
-var thenify = require('thenify');
-var originalMorgan = require('morgan');
+const thenify = require('thenify')
+const morgan = require('morgan')
 
 /**
  * Expose `morgan`.
  */
 
-module.exports = originalMorgan;
+module.exports = morgan
 
-originalMorgan.middleware = morgan;
+morgan.middleware = morganWrapper
 
 /**
  * morgan wrapper.
  */
 
-function morgan() {
-  var middleware = thenify(originalMorgan.apply(null, arguments));
+function morganWrapper() {
+  var middleware = thenify(morgan.apply(null, arguments))
   return function* morgan(next) {
-    yield middleware(this.req, this.res);
-    yield next;
+    yield middleware(this.req, this.res)
+    next && (yield next)
   }
 }

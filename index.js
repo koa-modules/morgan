@@ -1,3 +1,5 @@
+'use strict'
+
 /*!
  * morgan
  * Copyright(c) 2010 Sencha Inc.
@@ -20,6 +22,10 @@ const originalMorgan = require('morgan')
 
 module.exports = morgan
 
+morgan.compile = originalMorgan.compile
+morgan.format = originalMorgan.format
+morgan.token = originalMorgan.token
+
 function morgan(format, options) {
   const fn = originalMorgan(format, options)
   return (ctx, next) => {
@@ -30,7 +36,3 @@ function morgan(format, options) {
     }).then(next)
   }
 }
-
-morgan.compile = originalMorgan.compile
-morgan.format = originalMorgan.format
-morgan.token = originalMorgan.token

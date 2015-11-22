@@ -1,24 +1,23 @@
 
 process.env.NO_DEPRECATION = 'morgan'
 
-const co = require('co')
-const assert = require('power-assert')
-const koa = require('koa')
-const morgan = require('..')
-const request = require('supertest')
-const split = require('split')
+var assert = require('assert')
+var http = require('http')
+var morgan = require('..')
+var request = require('supertest')
+var split = require('split')
 
-describe('morgan.middleware()', function () {
-  describe('arguments', function () {
-    it('should use default format', function (done) {
-      var cb = after(2, function (err, res, line) {
+describe('morgan()', () => {
+  describe('arguments', () => {
+    it('should use default format', (done) => {
+      var cb = after(2, (err, res, line) => {
         if (err) return done(err)
         assert(res.text.length > 0)
         assert.equal(line.substr(0, res.text.length), res.text)
         done()
       })
 
-      var stream = createLineStream(function (line) {
+      var stream = createLineStream((line) => {
         cb(null, null, line)
       })
 
@@ -31,7 +30,7 @@ describe('morgan.middleware()', function () {
       it('should accept format as format name', function (done) {
         var cb = after(2, function (err, res, line) {
           if (err) return done(err)
-          assert(/^GET \/ 200 16 - \d+\.\d{3} ms$/.test(line))
+          assert(/^GET \/ 200 - - \d+\.\d{3} ms$/.test(line))
           done()
         })
 
@@ -306,9 +305,9 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer(':res[x-keys]', { stream: stream }, function *(next) {
-          yield next
-          this.set('X-Keys', ['foo', 'bar'])
+        var server = createServer(':res[x-keys]', { stream: stream }, function (ctx, next) {
+          ctx.res.setHeader('X-Keys', ['foo', 'bar'])
+          return next(ctx)
         })
 
         request(server)
@@ -343,21 +342,12 @@ describe('morgan.middleware()', function () {
           done()
         })
 
-        morgan.token('remote-addr', getip)
-        function getip(req) {
-          return req.headers['x-forwarded-for']
-            || req.ip
-            || req._remoteAddress
-            || (req.connection && req.connection.remoteAddress)
-            || undefined
-        }
-
         var stream = createLineStream(function (line) {
           cb(null, null, line)
         })
 
-        var server = createServer(':remote-addr', { stream: stream }, null, function *() {
-          this.req.headers['x-forwarded-for'] = '10.0.0.1'
+        var server = createServer(':remote-addr', { stream: stream }, null, function (req) {
+          req.ip = '10.0.0.1'
         })
 
         request(server)
@@ -384,15 +374,10 @@ describe('morgan.middleware()', function () {
         var stream = createLineStream(function (line) {
           cb(null, null, line)
         })
-        var logger = morgan.middleware(':remote-addr', { stream: stream })
+        var logger = morgan(':remote-addr', { stream: stream })
 
         server.on('request', function (req, res) {
-          var ctx = {
-            req: req,
-            res: res
-          }
-          co.call(ctx, function *() {
-            yield logger
+          logger({ req, res }, function (ctx) {
             delete req._remoteAddress
             res.end(req.connection.remoteAddress)
           })
@@ -438,20 +423,19 @@ describe('morgan.middleware()', function () {
           assert.equal(line, res.text)
 
           res.req.connection.destroy()
-          done()
-          //server.close(done)
+          server.close(done)
         })
 
         var stream = createLineStream(function (line) {
           cb(null, null, line)
         })
 
-        var server = createServer(':remote-addr', { stream: stream }, function* (next) {
-          delete this.req._remoteAddress
-          yield next
+        var server = createServer(':remote-addr', { stream: stream }, function (ctx, next) {
+          delete ctx.req._remoteAddress
+          return next(ctx)
         })
 
-        request(server)
+        request(server.listen())
         .get('/')
         .set('Connection', 'keep-alive')
         .expect(200, cb)
@@ -468,8 +452,10 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer(':remote-addr', { stream: stream }, null, function* () {
-          this.req.headers['x-forwarded-for'] = '10.0.0.1'
+        var server = createServer(':remote-addr', { stream: stream }, null, function (req) {
+          Object.defineProperty(req, 'ip', {
+            get: function () { return req.connection.remoteAddress ? '10.0.0.1' : undefined }
+          })
         })
 
         request(server)
@@ -478,7 +464,6 @@ describe('morgan.middleware()', function () {
         .expect(200, cb)
       })
 
-      /*
       it('should not fail if req.connection missing', function (done) {
         var cb = after(2, function (err, res, line) {
           if (err) return done(err)
@@ -486,24 +471,22 @@ describe('morgan.middleware()', function () {
           assert.equal(line, res.text)
 
           res.req.connection.destroy()
-          done();
-          //server.close(done)
+          server.close(done)
         })
 
         var stream = createLineStream(function (line) {
           cb(null, null, line)
         })
 
-        var server = createServer(':remote-addr', { stream: stream }, null, function* () {
-          delete this.req.connection
+        var server = createServer(':remote-addr', { stream: stream }, null, function (req) {
+          delete req.connection
         })
 
-        request(server)
+        request(server.listen())
         .get('/')
         .set('Connection', 'keep-alive')
         .expect(200, cb)
       })
-      */
     })
 
     describe(':remote-user', function () {
@@ -580,6 +563,63 @@ describe('morgan.middleware()', function () {
         .expect(200, cb)
       })
 
+      it('should have three digits by default', function (done) {
+        var cb = after(2, function (err, res, line) {
+          if (err) return done(err)
+          var end = Date.now()
+          assert.ok(/^[0-9]+\.[0-9]{3}$/.test(line))
+          done()
+        })
+
+        var stream = createLineStream(function (line) {
+          cb(null, null, line)
+        })
+
+        var start = Date.now()
+
+        request(createServer(':response-time', { stream: stream }))
+        .get('/')
+        .expect(200, cb)
+      })
+
+      it('should have five digits with argument "5"', function (done) {
+        var cb = after(2, function (err, res, line) {
+          if (err) return done(err)
+          var end = Date.now()
+          assert.ok(/^[0-9]+\.[0-9]{5}$/.test(line))
+          done()
+        })
+
+        var stream = createLineStream(function (line) {
+          cb(null, null, line)
+        })
+
+        var start = Date.now()
+
+        request(createServer(':response-time[5]', { stream: stream }))
+        .get('/')
+        .expect(200, cb)
+      })
+
+      it('should have no digits with argument "0"', function (done) {
+        var cb = after(2, function (err, res, line) {
+          if (err) return done(err)
+          var end = Date.now()
+          assert.ok(/^[0-9]+$/.test(line))
+          done()
+        })
+
+        var stream = createLineStream(function (line) {
+          cb(null, null, line)
+        })
+
+        var start = Date.now()
+
+        request(createServer(':response-time[0]', { stream: stream }))
+        .get('/')
+        .expect(200, cb)
+      })
+
       it('should not include response latency', function (done) {
         var cb = after(2, function (err, res, line) {
           if (err) return done(err)
@@ -593,13 +633,14 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer(':response-time', { stream: stream }, function* (next) {
-          var ctx = this;
-          ctx.body = 'hello, '
+        var server = createServer(':response-time', { stream: stream }, function (ctx) {
+          const req = ctx.req
+          const res = ctx.res
+          res.write('hello, ')
           end = Date.now()
 
-          setTimeout(function() {
-            ctx.body = 'world!';
+          setTimeout(function () {
+            res.end('world!')
           }, 50)
         })
 
@@ -622,9 +663,9 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer(':response-time', { stream: stream }, function* (next) {
-          delete this.req._startAt
-          yield next
+        var server = createServer(':response-time', { stream: stream }, function (ctx, next) {
+          delete ctx.req._startAt
+          return next(ctx)
         })
 
         request(server)
@@ -664,18 +705,20 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var logger = morgan.middleware(':response-time', {
+        var logger = morgan(':response-time', {
           immediate: true,
           stream: stream
         })
 
-        var app = koa()
-        app.use(logger)
-        app.use(function*() {
-          cb()
-          this.status = 200
+        var server = http.createServer(function (req, res) {
+          setTimeout(function () {
+            logger({ req, res }, function (ctx) {
+              cb()
+            })
+          }, 10)
+
+          res.end()
         })
-        var server = app.listen()
 
         request(server)
         .get('/')
@@ -723,11 +766,11 @@ describe('morgan.middleware()', function () {
 
       it('should not exist for aborted request', function (done) {
         var stream = createLineStream(function (line) {
-          assert.equal(line, '404')
+          assert.equal(line, '-')
           server.close(done)
         })
 
-        var server = createServer(':status', { stream: stream }, function* () {
+        var server = createServer(':status', { stream: stream }, function () {
           test.abort()
         })
 
@@ -764,9 +807,9 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer(':url', { stream: stream }, function* (next) {
-          this.req.originalUrl = '/bar'
-          yield next
+        var server = createServer(':url', { stream: stream }, function (ctx, next) {
+          ctx.req.originalUrl = '/bar'
+          return next(ctx)
         })
 
         request(server)
@@ -776,11 +819,11 @@ describe('morgan.middleware()', function () {
 
       it('should not exist for aborted request', function (done) {
         var stream = createLineStream(function (line) {
-          assert.equal(line, '404')
+          assert.equal(line, '-')
           server.close(done)
         })
 
-        var server = createServer(':status', { stream: stream }, function* () {
+        var server = createServer(':status', { stream: stream }, function () {
           test.abort()
         })
 
@@ -846,7 +889,7 @@ describe('morgan.middleware()', function () {
         var cb = after(2, function (err, res, line) {
           if (err) return done(err)
           var masked = line.replace(/\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} \+0000/, '_timestamp_')
-          assert.equal(masked, res.text + ' - tj [_timestamp_] "GET / HTTP/1.1" 200 16 "http://localhost/" "my-ua"')
+          assert.equal(masked, res.text + ' - tj [_timestamp_] "GET / HTTP/1.1" 200 - "http://localhost/" "my-ua"')
           done()
         })
 
@@ -868,7 +911,7 @@ describe('morgan.middleware()', function () {
         var cb = after(2, function (err, res, line) {
           if (err) return done(err)
           var masked = line.replace(/\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} \+0000/, '_timestamp_')
-          assert.equal(masked, res.text + ' - tj [_timestamp_] "GET / HTTP/1.1" 200 16')
+          assert.equal(masked, res.text + ' - tj [_timestamp_] "GET / HTTP/1.1" 200 -')
           done()
         })
 
@@ -888,7 +931,7 @@ describe('morgan.middleware()', function () {
         var cb = after(2, function (err, res, line) {
           if (err) return done(err)
           var masked = line.replace(/\w+, \d+ \w+ \d+ \d+:\d+:\d+ \w+/, '_timestamp_')
-          assert.equal(masked, res.text + ' - tj [_timestamp_] "GET / HTTP/1.1" 200 16 "http://localhost/" "my-ua"')
+          assert.equal(masked, res.text + ' - tj [_timestamp_] "GET / HTTP/1.1" 200 - "http://localhost/" "my-ua"')
           done()
         })
 
@@ -919,9 +962,9 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer('dev', { stream: stream }, function* (next) {
-          this.status = 102
-          yield next
+        var server = createServer('dev', { stream: stream }, function (ctx, next) {
+          ctx.res.statusCode = 102
+          next(ctx)
         })
 
         request(server)
@@ -942,9 +985,9 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer('dev', { stream: stream }, function* (next) {
-          this.status = 200
-          yield next
+        var server = createServer('dev', { stream: stream }, function (ctx, next) {
+          ctx.res.statusCode = 200
+          next(ctx)
         })
 
         request(server)
@@ -965,9 +1008,9 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer('dev', { stream: stream }, function* (next) {
-          this.status = 300
-          yield next
+        var server = createServer('dev', { stream: stream }, function (ctx, next) {
+          ctx.res.statusCode = 300
+          next(ctx)
         })
 
         request(server)
@@ -988,9 +1031,9 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer('dev', { stream: stream }, function* (next) {
-          this.status = 400
-          yield next
+        var server = createServer('dev', { stream: stream }, function (ctx, next) {
+          ctx.res.statusCode = 400
+          next(ctx)
         })
 
         request(server)
@@ -1011,9 +1054,9 @@ describe('morgan.middleware()', function () {
           cb(null, null, line)
         })
 
-        var server = createServer('dev', { stream: stream }, function* (next) {
-          this.status = 500
-          yield next
+        var server = createServer('dev', { stream: stream }, function (ctx, next) {
+          ctx.res.statusCode = 500
+          next(ctx)
         })
 
         request(server)
@@ -1051,7 +1094,7 @@ describe('morgan.middleware()', function () {
         var cb = after(2, function (err, res, line) {
           if (err) return done(err)
           var masked = line.replace(/\d+\.\d{3} ms/, '_timer_')
-          assert.equal(masked, res.text + ' tj GET / HTTP/1.1 200 16 - _timer_')
+          assert.equal(masked, res.text + ' tj GET / HTTP/1.1 200 - - _timer_')
           done()
         })
 
@@ -1071,7 +1114,7 @@ describe('morgan.middleware()', function () {
         var cb = after(2, function (err, res, line) {
           if (err) return done(err)
           var masked = line.replace(/\d+\.\d{3} ms/, '_timer_')
-          assert.equal(masked, 'GET / 200 16 - _timer_')
+          assert.equal(masked, 'GET / 200 - - _timer_')
           done()
         })
 
@@ -1096,7 +1139,7 @@ describe('morgan.middleware()', function () {
 
       function writeLog(log) {
         assert.equal(log, 'GET /first\nGET /second\n')
-        //server.close()
+        server.close()
         done()
       }
 
@@ -1104,15 +1147,15 @@ describe('morgan.middleware()', function () {
       request(server)
       .get('/first')
       .end(function (err, res) {
+        if (err) throw err
+        count++
+        request(server)
+        .get('/second')
+        .end(function (err, res) {
           if (err) throw err
           count++
-          request(server)
-            .get('/second')
-            .end(function(err, res) {
-              if (err) throw err
-              count++
-            })
         })
+      })
     })
 
     it('should accept custom interval', function (done) {
@@ -1124,7 +1167,7 @@ describe('morgan.middleware()', function () {
 
       function writeLog(log) {
         assert.equal(log, 'GET /first\nGET /second\n')
-        //server.close()
+        server.close()
         done()
       }
 
@@ -1132,15 +1175,15 @@ describe('morgan.middleware()', function () {
       request(server)
       .get('/first')
       .end(function (err, res) {
+        if (err) throw err
+        count++
+        request(server)
+        .get('/second')
+        .end(function (err, res) {
           if (err) throw err
           count++
-          request(server)
-            .get('/second')
-            .end(function(err, res) {
-              if (err) throw err
-              count++
-            })
         })
+      })
     })
   })
 
@@ -1221,9 +1264,9 @@ describe('morgan.middleware()', function () {
         cb(null, null, line)
       })
 
-      var server = createServer(':method :url :res[x-sent]', { immediate: true, stream: stream }, function* (next) {
+      var server = createServer(':method :url :res[x-sent]', { immediate: true, stream: stream }, function (ctx, next) {
         assert.ok(lineLogged)
-        yield next
+        next(ctx)
       })
 
       request(server)
@@ -1310,31 +1353,31 @@ function createLineStream(callback) {
 }
 
 function createServer(format, opts, fn, fn1) {
-  var logger = morgan.middleware(format, opts)
+  var logger = morgan(format, opts)
   var middle = fn || noopMiddleware
 
-  var app = koa()
-  app.proxy = true
-  app.use(function* first(next) {
+  return http.createServer((req, res) => {
+    // prior alterations
     if (fn1) {
-      yield fn1
+      fn1(req, res)
     }
-    yield* next
-  })
-  app.use(logger)
-  app.use(middle)
-  app.use(function *() {
-    this.set('X-Sent', 'true')
-    this.body = this.ip || '-'
-  })
-  app.on('error', function(err, ctx) {
-    ctx.status = 500
-    ctx.body = err.message
-  })
 
-  return app.listen()
+    logger({ req, res }, (ctx) => {
+      return middle(ctx, (ctx) => {
+        const req = ctx.req
+        const res = ctx.res
+        res.setHeader('X-Sent', 'true')
+        res.end((req.connection && req.connection.remoteAddress) || '-')
+      })
+    })
+    .catch((err, ctx) => {
+      ctx.res.statusCode = 500
+      ctx.res.end(err.message)
+    })
+
+  })
 }
 
-function* noopMiddleware(next) {
-  yield next
+function noopMiddleware(ctx, next) {
+  return next(ctx)
 }

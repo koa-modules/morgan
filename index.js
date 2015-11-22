@@ -12,8 +12,7 @@
  * Module dependencies.
  */
 
-const thenify = require('thenify')
-const morgan = require('morgan')
+const originalMorgan = require('morgan')
 
 /**
  * Expose `morgan`.
@@ -21,16 +20,17 @@ const morgan = require('morgan')
 
 module.exports = morgan
 
-morgan.middleware = morganWrapper
-
-/**
- * morgan wrapper.
- */
-
-function morganWrapper() {
-  var middleware = thenify(morgan.apply(null, arguments))
-  return function* morgan(next) {
-    yield middleware(this.req, this.res)
-    next && (yield next)
+function morgan(format, options) {
+  const fn = originalMorgan(format, options)
+  return (ctx, next) => {
+    return new Promise((resolve, reject) => {
+      fn(ctx.req, ctx.res, (err) => {
+        err ? reject(err) : resolve(ctx)
+      })
+    }).then(next)
   }
 }
+
+morgan.compile = originalMorgan.compile
+morgan.format = originalMorgan.format
+morgan.token = originalMorgan.token

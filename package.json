@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --reporter spec --bail --check-leaks",
-    "test-ci": "node_modules/.bin/isparta cover node_modules/.bin/_mocha --report lcovonly -- --reporter spec --check-leaks test/*.js",
-    "test-cov": "node_modules/.bin/isparta cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/*.js"
+    "test-ci": "isparta cover node_modules/.bin/_mocha --report lcovonly -- --reporter spec --check-leaks test/*.js",
+    "test-cov": "isparta cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/*.js"
   },
   "repository": "koa-modules/morgan",
   "keywords": [

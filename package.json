@@ -21,16 +21,15 @@
     "index.js"
   ],
   "dependencies": {
-    "morgan": "^1.6.1",
-    "thenify": "^3.1.0"
+    "morgan": "github:expressjs/morgan"
   },
   "devDependencies": {
     "co": "^4.6.0",
-    "isparta": "^3.0.4",
-    "koa": "^1.0.0",
-    "mocha": "^2.3.3",
-    "power-assert": "^1.0.1",
-    "split": "^1.0.0",
-    "supertest": "^1.1.0"
+    "isparta": "^4.x",
+    "koa": "^2.0.0-alpha.3",
+    "mocha": "^2.x",
+    "power-assert": "^1.x",
+    "split": "^1.x",
+    "supertest": "^1.x"
   }
 }

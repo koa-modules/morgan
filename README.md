@@ -17,7 +17,29 @@ $ npm install --save koa-morgan
 
 ## Usage
 
-Adding this into your koa server file:
+### **=1.x**, 100%, working with **morgan** and **koa-v2**
+
+```js
+const fs = require('fs')
+const Koa = require('koa')
+const morgan = require('../')
+
+// create a write stream (in append mode)
+const accessLogStream = fs.createWriteStream(__dirname + '/access.log',
+                                             { flags: 'a' })
+const app = new Koa()
+
+// setup the logger
+app.use(morgan('combined', { stream: accessLogStream }))
+
+app.use((ctx) => {
+  ctx.body = 'hello, world!'
+})
+
+app.listen(2333)
+```
+
+### **<1.x**
 
 ```js
 var koa = require('koa');
@@ -27,13 +49,6 @@ var app = koa();
 app.use(morgan.middleware(format, options));
 
 ```
-
-## API
-
-* **morgan**
-
-* **morgan.middleware(format, options)**:
-> Just **morgan** wrapper, returns a GeneratorFunction.
 
 [npm-img]: https://img.shields.io/npm/v/koa-morgan.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/koa-morgan

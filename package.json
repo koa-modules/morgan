@@ -2,6 +2,8 @@
   "name": "koa-morgan",
   "version": "1.0.0-alpha.1",
   "description": "HTTP request logger middleware for koa",
+  "author": "Fangdun Cai <cfddream@gmail.com>",
+  "license": "MIT",
   "main": "index.js",
   "scripts": {
     "test": "mocha --reporter spec --bail --check-leaks",
@@ -13,8 +15,6 @@
     "logger",
     "morgan"
   ],
-  "author": "Fangdun Cai <cfddream@gmail.com>",
-  "license": "MIT",
   "files": [
     "LICENSE",
     "README.md",
@@ -31,5 +31,12 @@
     "power-assert": "^1.x",
     "split": "^1.x",
     "supertest": "^1.x"
-  }
+  },
+  "enignes": {
+    "node": ">= 4"
+  },
+  "files": [
+    "LICENSE",
+    "index.js"
+  ]
 }

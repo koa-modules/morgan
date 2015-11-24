@@ -1,6 +1,6 @@
 {
   "name": "koa-morgan",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0",
   "description": "HTTP request logger middleware for koa",
   "author": "Fangdun Cai <cfddream@gmail.com>",
   "license": "MIT",
@@ -10,15 +10,10 @@
     "test-ci": "isparta cover node_modules/.bin/_mocha --report lcovonly -- --reporter spec --check-leaks test/*.js",
     "test-cov": "isparta cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/*.js"
   },
-  "repository": "koa-modules/morgan",
+  "repository": "github:koa-modules/morgan",
   "keywords": [
     "logger",
     "morgan"
-  ],
-  "files": [
-    "LICENSE",
-    "README.md",
-    "index.js"
   ],
   "dependencies": {
     "morgan": "github:expressjs/morgan"
@@ -36,7 +31,9 @@
     "node": ">= 4"
   },
   "files": [
+    "History.md",
     "LICENSE",
+    "README.md",
     "index.js"
   ]
 }

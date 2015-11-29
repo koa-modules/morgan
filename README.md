@@ -23,7 +23,7 @@ $ npm install --save koa-morgan
 ```js
 const fs = require('fs')
 const Koa = require('koa')
-const morgan = require('../')
+const morgan = require('koa-morgan')
 
 // create a write stream (in append mode)
 const accessLogStream = fs.createWriteStream(__dirname + '/access.log',

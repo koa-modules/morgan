@@ -40,7 +40,7 @@ app.use((ctx) => {
 app.listen(2333)
 ```
 
-### **<1.x**
+### **=0.x**, working with **koa-v1**
 
 ```js
 var koa = require('koa');
